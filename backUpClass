@@ -1,0 +1,76 @@
+package com.shekar;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import ezvcard.Ezvcard;
+import ezvcard.VCard;
+
+public class backUpClass {
+
+	public static void main(String[] args) {
+		String vcfFilePath = "C:\\Users\\sheka\\Downloads\\contactsBackup.vcf";
+		String excelFilePath = "C:\\Users\\sheka\\Downloads\\contactsBackUp - Copy.xlsx";
+
+		try {
+			List<VCard> vCards = readVcfFile(vcfFilePath);
+			writeToExcel(vCards, excelFilePath);
+			System.out.println("Conversion successful!");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static List<VCard> readVcfFile(String filePath) throws IOException {
+		try (FileInputStream fis = new FileInputStream(filePath)) {
+			return Ezvcard.parse(fis).all();
+		}
+	}
+
+	private static void writeToExcel(List<VCard> vCards, String filePath) throws IOException {
+		try (Workbook workbook = new XSSFWorkbook()) {
+			Sheet sheet = workbook.createSheet("Contacts");
+
+			int rowNumber = 0;
+
+			for (VCard vCard : vCards) {
+				Row row = sheet.createRow(rowNumber++);
+
+				// Extract relevant information from VCard
+				String fullName = vCard.getFormattedName().getValue();
+				String phoneNumber = vCard.getTelephoneNumbers().isEmpty() ? ""
+						: vCard.getTelephoneNumbers().get(0).getText();
+				byte[] photoBytes = vCard.getPhotos().isEmpty() ? null : vCard.getPhotos().get(0).getData();
+				String photoFileName = "photo_" + rowNumber + ".png";
+
+				// Create cells and set values
+				Cell cell0 = row.createCell(0);
+				cell0.setCellValue(fullName);
+
+				Cell cell1 = row.createCell(1);
+				cell1.setCellValue(phoneNumber);
+
+				// Save photo to a file
+				if (photoBytes != null) {
+					savePhoto(photoBytes, photoFileName);
+				}
+			}
+
+			// Save the workbook to a file
+			try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+				workbook.write(fileOut);
+			}
+		}
+	}
+
+	private static void savePhoto(byte[] photoBytes, String fileName) throws IOException {
+		try (FileOutputStream fos = new FileOutputStream(fileName)) {
+			fos.write(photoBytes);
+		}
+	}
+}
