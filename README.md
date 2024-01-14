@@ -1,5 +1,7 @@
 # contactsVCF_BackUp
 # This is the pom.xml file to be added in the project.
+# Make sure to change the excelFilePath and vcfFilePath variables in backUpClass
+
 
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
